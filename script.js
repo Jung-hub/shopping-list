@@ -287,8 +287,11 @@ function addItem(e) {
   
 }
 
-
+function removeItem(e) {
+  console.log(e.target);
+}
 
 
 //addEventListioner
 itemForm.addEventListener('submit', addItem);
+itemList.addEventListener('click', removeItem);
