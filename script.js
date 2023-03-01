@@ -208,7 +208,8 @@
 const itemForm = document.getElementById('item-form');
 const itemInput = document.getElementById('item-input');
 const itemList = document.getElementById('item-list');
-
+const clearBtn = document.getElementById('clear');
+const itemFilter = document.getElementById('filter');
 
 function createTextNode(textContent) {
   return document.createTextNode(textContent);
@@ -282,16 +283,50 @@ function addItem(e) {
   // append li into item list
   itemList.appendChild(li);
   
+  //call check UI
+  checkUI();
+
   // reset itemInput.value = ''
   itemInput.value = '';
   
 }
 
 function removeItem(e) {
-  console.log(e.target);
+  if (e.target.nodeName === 'I') {
+    //console.log(`user click ${e.target.nodeName}`);
+    if (confirm('Are you sure?')) {
+      e.target.parentElement.parentElement.remove();
+      checkUI();
+    }
+  } else {
+    console.log(`user clicked ${e.target.nodeName}`);
+  }
+  //e.target.remove();
 }
 
+function clearItems() {
+  if (confirm('Are you sure?')) {
+    while (itemList.hasChildNodes()) {
+      itemList.removeChild(itemList.firstChild);
+    }
+    checkUI();
+  }
+}
+
+function checkUI() {
+  const items = itemList.querySelectorAll('li');
+  if (items.length === 0) {
+    clearBtn.style.display = 'none';
+    itemFilter.style.display = 'none';
+  } else {
+    clearBtn.style.display = 'block';
+    itemFilter.style.display = 'block';
+  }
+}
 
 //addEventListioner
 itemForm.addEventListener('submit', addItem);
 itemList.addEventListener('click', removeItem);
+clearBtn.addEventListener('click', clearItems);
+
+checkUI();
