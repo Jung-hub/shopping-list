@@ -211,9 +211,30 @@ const itemList = document.getElementById('item-list');
 const clearBtn = document.getElementById('clear');
 const itemFilter = document.getElementById('filter');
 
+/**
+ * display all items from localStorage while loading page
+ */
+function displayItems() {
+  const itemsFromStorage = getItemsFromStorage();
+  itemsFromStorage.forEach((item) => addItemToDom(item));
+  checkUI();
+}
+
+
+/**
+ * create a new text node 
+ * @param {string} textContent - the content of the text 
+ * @returns {object} textNode - the object of textNode
+ */
 function createTextNode(textContent) {
   return document.createTextNode(textContent);
 }
+
+/**
+ * create a new button 
+ * @param {string} classes - the className for a new button 
+ * @returns {object} button - the object of the new button
+ */
 //classes: remove-item btn-link text-red
 function createButton(classes) {
   //create a new button
@@ -232,6 +253,12 @@ function createButton(classes) {
   return button;
 }
 
+/**
+ * cteate a new icon with class names
+ * 
+ * @param {string} classes - set the attribue of className
+ * @returns {object} icon - the object of <i></i>
+ */
 //classes: fa-solid fa-xmark
 function createIcon(classes) {
   // create image tag and set attribute in the image
@@ -240,13 +267,16 @@ function createIcon(classes) {
   //set attributes of the icon
   icon.setAttribute('class', classes);
   
-  //return icon
+  //return icon object
   return icon;
 }
 
-
+/**
+ * create a new <li></li>
+ * @param {string} textContent - the text content of <li></li>  
+ * @returns {object} - the object of <li></li>
+ */
 function createItem(textContent) {
-  // creation of li
   // create a new li
   const li = document.createElement('li');
   
@@ -266,7 +296,12 @@ function createItem(textContent) {
   return li;
 }
 
-function addItem(e) {
+/**
+ * add a new item when user sumbit an item name
+ * @param {object} e - event object 
+ * @returns none - when user's input is empty or all whitespaces
+ */
+function addItemSubmit(e) {
   e.preventDefault();
 
   //Validate Input
@@ -276,13 +311,12 @@ function addItem(e) {
     return;
   }
 
-  //console.log(document.__proto__);
-  // create a new li
-  const li = createItem(userInput);
+  //add item when user submit the input
+  addItemToDom(userInput); 
   
-  // append li into item list
-  itemList.appendChild(li);
-  
+  //add item into localStorage
+  addItemToStorage(userInput);
+
   //call check UI
   checkUI();
 
@@ -291,28 +325,133 @@ function addItem(e) {
   
 }
 
-function removeItem(e) {
-  if (e.target.nodeName === 'I') {
-    //console.log(`user click ${e.target.nodeName}`);
-    if (confirm('Are you sure?')) {
-      e.target.parentElement.parentElement.remove();
-      checkUI();
-    }
-  } else {
-    console.log(`user clicked ${e.target.nodeName}`);
-  }
-  //e.target.remove();
+function getItemsFromStorage() {
+  //get items' string from localStorage
+  const stringItemsFromStorage = localStorage.getItem('items');
+  //check the data in localStorage is null or not
+  //if null - the means of no data in localStorage and then create a new array and return it
+  //otherwise - use JSON to convert data from localStorage and return it
+  // let itemsFromStorage;
+  // if (stringItemsFromStorage === null) {
+  //   itemsFromStorage = [];
+  // } else {
+  //   itemsFromStorage = JSON.parse(stringItemsFromStorage);
+  // }
+  // return itemsFromStorage;
+  return stringItemsFromStorage === null? new Array(): JSON.parse(stringItemsFromStorage);
 }
+
+/**
+ * add item into localStorage
+ * 
+ * @param {string} item - the name of the item 
+ */
+function addItemToStorage(item) {
+  
+  
+  //create a variable to store an array from localStorage
+  //check the data in localStorage is null or not
+  //if null - the mean of no data in localStorage and create a new array
+  //otherwise - use JSON to convert data fron localStorage and store into itemsFromStorage
+  let itemsFromStorage = getItemsFromStorage();
+
+  //push item into the array of itemFromStorage
+  itemsFromStorage.push(item);
+  
+  //Update data in the localStorage by stringifying the array and storing into localStorage
+  localStorage.setItem('items', JSON.stringify(itemsFromStorage));
+
+}
+/**
+ * remove the item from the array by given item content
+ * @param {string} itemContent - the item that should be removed from the array 
+ */
+function removeItemFromStorage(itemContent) {
+  //get items fron the localStorage
+  let items = getItemsFromStorage();
+
+  //first way: find index of matched item content and then call array.splice(index, elementCount)
+    //const indexOfFoundItem = items.findIndex(item => item === textContentOfLi);
+    
+  //delete the element from the array
+  //items.splice(indexOfFoundItem, 1);
+    
+  //second way: filter out the matched item
+  items = items.filter((item) => item !== itemContent);
+
+  //set items into localStorage
+  localStorage.setItem('items', JSON.stringify(items));
+
+}
+
+
+/**
+ * create a new item and  append it into item's list
+ * 
+ * @param {string} userInput - new item's name 
+ */
+function addItemToDom(userInput) {
+  //console.log(document.__proto__);
+  // create a new li
+  const li = createItem(userInput);
+  
+  // append li into item list
+  itemList.appendChild(li);
+}
+
+/**
+ * check if users click the cross button
+ * @param {object} e - Event of clicking the cross button 
+ */
+function onClickItem(e) {
+  if (e.target.nodeName === 'I') {
+    //if (confirm('Are you sure?')) {
+    removeItem(e.target.parentElement.parentElement);
+    //}
+  }
+}
+
+
+/**
+ * remove the item by clicking the cross button of the item
+ * @param {object} e - Event of clicking the cross button 
+ */
+function removeItem(item) {
+  
+  if (confirm('Are you sure?')) {
+    //get item's text content
+    const textContentOfLi = item.firstChild.textContent;
+
+    //remove item fron localStorage
+    removeItemFromStorage(textContentOfLi);
+
+    //remove li
+    item.remove();
+
+    //check ui
+    checkUI();
+  }
+}
+
+/**
+ * clear all items fron the item list
+ */
 
 function clearItems() {
   if (confirm('Are you sure?')) {
     while (itemList.hasChildNodes()) {
       itemList.removeChild(itemList.firstChild);
     }
+    localStorage.removeItem('items');
     checkUI();
   }
 }
 
+/**
+ * check item list is empty or not
+ * if empty - block clear button and the input of item filter
+ * otherwise - display clear button and the input of item filter
+ */
 function checkUI() {
   const items = itemList.querySelectorAll('li');
   if (items.length === 0) {
@@ -324,9 +463,66 @@ function checkUI() {
   }
 }
 
-//addEventListioner
-itemForm.addEventListener('submit', addItem);
-itemList.addEventListener('click', removeItem);
-clearBtn.addEventListener('click', clearItems);
 
-checkUI();
+/**
+ * filter keyword-matched items by given user's input
+ * @param {object} e - Event object  
+ */
+
+function filterItems(e) {
+  /** flow chart
+   *  1 get user input and convert with lower case
+   *  2 get all items from itemList
+   *  3 check each item content is matched with user's input -
+   *    index >= 0: item's style display is equal to 'flex'
+   *    index < 0: item's style display is equal to 'block' 
+   * 
+  */ 
+
+  //Get user input
+  const userInput = e.target.value.trim().toLocaleLowerCase();
+
+  //Get all li elements
+  const items = itemList.querySelectorAll('li');
+
+  //Check each item content with user's input
+  items.forEach((item) => item.firstChild.textContent.toLocaleLowerCase().indexOf(userInput) >= 0 ?
+    item.style.display = 'flex': item.style.display = 'none');
+}
+
+/**
+ * initialise addEventListener and functions while loading page at first time
+ */
+
+function init() {
+  //addEventListioner
+  itemForm.addEventListener('submit', addItemSubmit);
+  //itemList.addEventListener('click', removeItem);
+  itemList.addEventListener('click', onClickItem);
+  clearBtn.addEventListener('click', clearItems);
+
+  //use 'input' keyword to check user's typeing
+  itemFilter.addEventListener('input', filterItems);
+
+  //add document addEvenListener to load items from localStorage
+  document.addEventListener('DOMContentLoaded', displayItems)
+
+  checkUI();
+}
+
+//store 'name': 'Jung'
+//localStorage.setItem('name', 'Jung');
+
+//get 'name' by using localstorage.getItem('name')
+//const getName = localStorage.getItem('name');
+//console.log(getName);
+
+//remove 'name': 'Jung' from local storage
+//localStorage.removeItem('name');
+
+//remove all items from local storage
+//localStorage.clear();
+
+//use json
+
+init();
