@@ -210,7 +210,9 @@ const itemInput = document.getElementById('item-input');
 const itemList = document.getElementById('item-list');
 const clearBtn = document.getElementById('clear');
 const itemFilter = document.getElementById('filter');
+const formBtn = itemForm.querySelector('button');
 
+let isEditMode = false;
 /**
  * display all items from localStorage while loading page
  */
@@ -220,6 +222,10 @@ function displayItems() {
   checkUI();
 }
 
+function checkIfItemExists(item) {
+  const itemsFromStorage = getItemsFromStorage();
+  return itemsFromStorage.includes(item);
+}
 
 /**
  * create a new text node 
@@ -310,6 +316,22 @@ function addItemSubmit(e) {
     alert('Please add an item');
     return;
   }
+  // check for edit mode
+  // true
+  // 1 find li with class name of edit - mode
+  // 2 remove the li from the localStorage
+  // 3 remove the li
+  // 4 set isEditMode to false
+  if (isEditMode) {
+    const itemToEdit = itemList.querySelector('.edit-mode');
+    removeItemFromStorage(itemToEdit.textContent);
+    itemToEdit.remove();
+  } else {
+    if (checkIfItemExists(userInput)) {
+      alert('That item already exists!');
+      return;
+    }
+  } 
 
   //add item when user submit the input
   addItemToDom(userInput); 
@@ -320,9 +342,6 @@ function addItemSubmit(e) {
   //call check UI
   checkUI();
 
-  // reset itemInput.value = ''
-  itemInput.value = '';
-  
 }
 
 function getItemsFromStorage() {
@@ -404,11 +423,46 @@ function addItemToDom(userInput) {
  * @param {object} e - Event of clicking the cross button 
  */
 function onClickItem(e) {
-  if (e.target.nodeName === 'I') {
+  const nodeName = e.target.nodeName;
+  if (nodeName === 'I') {
     //if (confirm('Are you sure?')) {
     removeItem(e.target.parentElement.parentElement);
     //}
+  } else if (nodeName === 'LI') {
+    console.log(nodeName);
+    setItemToEdit(e.target);
   }
+}
+
+function removeAllChildNodes(givenObject) {
+  while (givenObject.hasChildNodes()) {
+    formBtn.removeChild(givenObject.firstChild);
+  };
+  return givenObject;
+}
+
+function setItemToEdit(item) {
+  //enable isEditMode from false to true
+  isEditMode = true;
+
+  itemList.querySelectorAll('li').forEach(i => i.classList.remove('edit-mode'));
+
+   
+  //add class named 'edit-mode' into classList
+  item.classList.add('edit-mode');
+  formBtn.innerHTML = '<i class="fa-solid fa-pen"></i>  Update Item';
+  formBtn.style.backgroundColor = '#228B22';
+  itemInput.value = item.textContent;
+
+  /*
+  while (formBtn.hasChildNodes()) {
+    formBtn.removeChild(formBtn.firstChild);
+  };
+  formBtn.style.backgroundColor = '#228B22';
+  formBtn.appendChild(createIcon('fa-solid fa-pen'));
+  formBtn.appendChild(createTextNode('Update Item'));
+  */
+  
 }
 
 
@@ -453,6 +507,10 @@ function clearItems() {
  * otherwise - display clear button and the input of item filter
  */
 function checkUI() {
+  
+
+  //check the number of items
+  //if the number is 0, then block clear button and item filter
   const items = itemList.querySelectorAll('li');
   if (items.length === 0) {
     clearBtn.style.display = 'none';
@@ -461,6 +519,13 @@ function checkUI() {
     clearBtn.style.display = 'block';
     itemFilter.style.display = 'block';
   }
+  //reset itemInput
+  itemInput.value = '';
+  isEditMode = false;
+  formBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Item';
+  formBtn.style.backgroundColor = '#333';
+  
+  
 }
 
 
